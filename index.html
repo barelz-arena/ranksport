@@ -360,7 +360,28 @@ function standings(g){
   return arr;
 }
 function decided(g){return g.matches.some(m=>m.hs!=null&&m.as!=null);}
-function winnerOfGroup(name){const g=state.groups.find(x=>x.name===name);if(!g||!decided(g))return null;return standings(g)[0].team;}
+function winnerOfGroup(name){
+    const g = state.groups.find(x => x.name === name);
+
+    // kalau grup tidak ada
+    if(!g){
+        return "TBD";
+    }
+
+    // kalau pertandingan grup belum selesai
+    const complete = g.matches.every(
+        m => m.hs != null && m.as != null
+    );
+
+    if(!complete){
+        return "Menunggu Hasil";
+    }
+
+    // ambil juara klasemen
+    const rank = standings(g);
+
+    return rank[0] ? rank[0].team : "TBD";
+}
 function sgClass(n){return n>0?'sg-pos':(n<0?'sg-neg':'');}
 function fmtSg(n){return (n>0?'+':'')+n;}
 
