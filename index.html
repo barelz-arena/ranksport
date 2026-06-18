@@ -360,32 +360,22 @@ function standings(g){
   return arr;
 }
 function decided(g){return g.matches.some(m=>m.hs!=null&&m.as!=null);}
-function winnerOfGroup(name){
-    const g = state.groups.find(x => x.name === name);
-
-    // kalau grup tidak ada
-    if(!g){
-        return "TBD";
-    }
-
-    // kalau pertandingan grup belum selesai
-    const complete = g.matches.every(
-        m => m.hs != null && m.as != null
-    );
-
-    if(!complete){
-        return "Menunggu Hasil";
-    }
-
-    // ambil juara klasemen
-    const rank = standings(g);
-
-    return rank[0] ? rank[0].team : "TBD";
-}
+function winnerOfGroup(name){const g=state.groups.find(x=>x.name===name);if(!g||!decided(g))return null;return standings(g)[0].team;}
 function sgClass(n){return n>0?'sg-pos':(n<0?'sg-neg':'');}
 function fmtSg(n){return (n>0?'+':'')+n;}
 
+function normalizeState(){
+  if(!state || typeof state!=='object' || !Array.isArray(state.groups)){ state=clone(DEFAULT); }
+  if(!state.scorers) state.scorers=[];
+  if(!state.knockout || typeof state.knockout!=='object') state.knockout=clone(DEFAULT.knockout);
+  const k=state.knockout;
+  if(!Array.isArray(k.sf) || k.sf.length<2) k.sf=clone(DEFAULT.knockout.sf);
+  if(!k.final || typeof k.final!=='object') k.final={hs:null,as:null};
+  if(!('date' in k)) k.date=DEFAULT.knockout.date;
+  state.groups.forEach(g=>{ if(!Array.isArray(g.matches)) g.matches=[]; });
+}
 function render(){
+  normalizeState();
   updateChrome();
   document.body.classList.toggle('editing',editing);
   const eb=document.getElementById('editBtn');
