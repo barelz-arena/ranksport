@@ -158,6 +158,17 @@
   .rules li:before{content:counter(tb);flex:none;width:24px;height:24px;border-radius:7px;background:var(--blue-deep);color:#fff;font-family:'Archivo',sans-serif;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
   .rules li b{color:var(--blue-deep);font-weight:700;}
   .rules li small{display:block;color:var(--muted);font-weight:500;margin-top:1px;}
+
+.teamedit{display:none;margin:10px 0;padding:10px;border:1px dashed var(--line);border-radius:12px;background:#f8faff}
+.te-title{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.te-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.te-row .teamInp{flex:1;min-width:0;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--paper);color:inherit}
+.tDel{flex:none;width:28px;height:28px;border:none;border-radius:8px;background:var(--red);color:#fff;font-weight:800;font-size:15px;line-height:1;cursor:pointer}
+.te-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.match.medit{display:flex;align-items:center;gap:6px}
+.match.medit .mTeam{flex:1;min-width:0;font-family:inherit;font-size:12px;padding:7px 6px;border:1px solid var(--line);border-radius:9px;background:var(--paper);color:inherit}
+.match.medit .scIn{width:44px;flex:none}
+.mDel{flex:none;width:26px;height:26px;border:none;border-radius:8px;background:var(--red);color:#fff;font-weight:800;cursor:pointer}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -196,13 +207,13 @@
   <div class="sechead">Fase Grup</div>
   <div class="groups" id="groups"></div>
 
-  <div class="sechead red">Top Skor</div>
-  <div class="topskor" id="topskor"></div>
-  <button class="btn ghost" id="addScorer" style="margin:12px 0;display:none;">＋ Tambah pemain</button>
-
   <div class="sechead">Bracket · Grand Champions</div>
   <div class="ko-date" id="koDate"></div>
   <div class="bracket" id="bracket"></div>
+
+  <div class="sechead red">Top Skor</div>
+  <div class="topskor" id="topskor"></div>
+  <button class="btn ghost" id="addScorer" style="margin:12px 0;display:none;">＋ Tambah pemain</button>
 
   <div class="sechead red">Sistem Penentuan Peringkat</div>
   <div class="rules">
@@ -310,13 +321,14 @@ function loadState(){
     }
   }catch(e){ fbOK = false; }
   if(!fbOK){ state = clone(DEFAULT); render(); setStat('Config Firebase belum diisi', false); return; }
+  state = clone(DEFAULT); render(); setStat('Memuat data…', false);   // tampil instan dulu, data Firebase nyusul
   fbRef.on('value', function(snap){
     if(editing) return;               // jangan timpa data yang lagi diedit
     const v = snap.val();
     if(v && v.groups){ state = v; if(!state.scorers) state.scorers = []; }
     else { state = clone(DEFAULT); if(canEdit) saveState(true); }   // seed kalau DB kosong
     render();
-    setStat('Live', true);
+    setStat('Terhubung Firebase', true);
   }, function(err){ state = clone(DEFAULT); render(); setStat('Gagal konek Firebase', false); });
 }
 function saveState(silent){
@@ -391,43 +403,67 @@ function renderGroups(){
       ?`<input class="gni gnInp" data-gi="${gi}" value="${esc(g.name)}"><input class="gdInp" data-gi="${gi}" value="${esc(g.date||'')}" placeholder="Tanggal">`
       :`<div class="gn">${esc(g.name)}</div><div class="gd">📅 ${esc(g.date||'-')}</div>`;
     const el=document.createElement('div');el.className='group';
-    el.innerHTML=`<div class="ghead">${head}</div><div id="stand-${gi}"></div>
-      <div class="matches"><h4>Jadwal &amp; Hasil</h4><div id="match-${gi}"></div>
-      <div class="grpedit"><button class="mini" data-act="rr" data-gi="${gi}">🔄 Buat jadwal (round robin)</button>
-      <button class="mini" data-act="addteam" data-gi="${gi}">＋ Tambah tim</button></div></div>`;
-    root.appendChild(el); renderStand(gi); renderMatches(gi);
+    el.innerHTML=`<div class="ghead">${head}</div><div class="teamedit" id="teamedit-${gi}"></div><div id="stand-${gi}"></div>
+      <div class="matches"><h4>Jadwal &amp; Hasil</h4><div id="match-${gi}"></div></div>`;
+    root.appendChild(el); renderTeamEdit(gi); renderStand(gi); renderMatches(gi);
   });
   if(!editing) return;
   root.querySelectorAll('.gnInp').forEach(inp=>inp.addEventListener('change',e=>{state.groups[+e.target.dataset.gi].name=e.target.value;render();autosave();}));
   root.querySelectorAll('.gdInp').forEach(inp=>inp.addEventListener('change',e=>{state.groups[+e.target.dataset.gi].date=e.target.value;autosave();}));
-  root.querySelectorAll('[data-act="rr"]').forEach(b=>b.addEventListener('click',e=>{const gi=+e.target.dataset.gi;state.groups[gi].matches=roundRobin(state.groups[gi].teams);renderMatches(gi);renderStand(gi);renderBracket();autosave();}));
-  root.querySelectorAll('[data-act="addteam"]').forEach(b=>b.addEventListener('click',e=>{const gi=+e.target.dataset.gi;state.groups[gi].teams.push("Tim baru "+(state.groups[gi].teams.length+1));render();autosave();}));
 }
+function renderTeamEdit(gi){
+  const el=document.getElementById('teamedit-'+gi); if(!el) return;
+  if(!editing){ el.innerHTML=''; el.style.display='none'; return; }
+  el.style.display='block';
+  const g=state.groups[gi];
+  el.innerHTML=`<div class="te-title">Tim (${g.teams.length})</div>`
+    + g.teams.map((t,ti)=>`<div class="te-row"><input class="teamInp" data-gi="${gi}" data-ti="${ti}" value="${esc(t)}"><button class="tDel" data-gi="${gi}" data-ti="${ti}" title="Hapus tim">×</button></div>`).join('')
+    + `<div class="te-actions"><button class="mini" data-act="addteam" data-gi="${gi}">＋ Tambah tim</button><button class="mini" data-act="rr" data-gi="${gi}">🔄 Buat jadwal (round robin)</button></div>`;
+  el.querySelectorAll('.teamInp').forEach(inp=>inp.addEventListener('change',e=>{const gv=+e.target.dataset.gi,ti=+e.target.dataset.ti;renameTeamByIndex(gv,ti,e.target.value.trim()||state.groups[gv].teams[ti]);render();autosave();}));
+  el.querySelectorAll('.tDel').forEach(b=>b.addEventListener('click',e=>{const gv=+e.currentTarget.dataset.gi,ti=+e.currentTarget.dataset.ti,gg=state.groups[gv];if(gg.teams.length<=2){toast('Minimal 2 tim per grup');return;}const nm=gg.teams[ti];gg.teams.splice(ti,1);gg.matches=gg.matches.filter(m=>m.home!==nm&&m.away!==nm);render();autosave();}));
+  el.querySelector('[data-act="addteam"]').addEventListener('click',e=>{const gv=+e.currentTarget.dataset.gi;state.groups[gv].teams.push('Tim baru '+(state.groups[gv].teams.length+1));render();autosave();});
+  el.querySelector('[data-act="rr"]').addEventListener('click',e=>{const gv=+e.currentTarget.dataset.gi;if(state.groups[gv].teams.length<2){toast('Butuh minimal 2 tim');return;}state.groups[gv].matches=roundRobin(state.groups[gv].teams);render();autosave();toast('Jadwal round robin dibuat');});
+}
+
+function renameTeamByIndex(gi,ti,newN){
+  const g=state.groups[gi],oldN=g.teams[ti];
+  if(oldN===newN) return;
+  g.teams[ti]=newN;
+  g.matches.forEach(m=>{if(m.home===oldN)m.home=newN;if(m.away===oldN)m.away=newN;});
+  (state.scorers||[]).forEach(s=>{if(s.team===oldN)s.team=newN;});
+}
+
 function renderStand(gi){
   const g=state.groups[gi],arr=standings(g);
   const rows=arr.map((r,idx)=>{
     const q=idx===0&&decided(g);
-    const tc=editing?`<input class="teamInp" data-gi="${gi}" data-old="${esc(r.team)}" value="${esc(r.team)}">`:`${esc(r.team)}${q?'<span class="tix">🎫 SF</span>':''}`;
+    const tc=`${esc(r.team)}${q?'<span class="tix">🎫 SF</span>':''}`;
     return `<tr class="${q?'qualify':''}"><td class="pos">${idx+1}</td><td class="tm" title="${esc(r.team)}">${tc}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.gf}</td><td>${r.ga}</td><td class="${sgClass(r.gd)}">${fmtSg(r.gd)}</td><td class="pts">${r.pts}</td></tr>`;
   }).join('');
   document.getElementById('stand-'+gi).innerHTML=`<table><thead><tr><th>#</th><th class="tm">Tim</th><th>P</th><th>M</th><th>S</th><th>K</th><th>GM</th><th>GK</th><th>SG</th><th>Pts</th></tr></thead><tbody>${rows}</tbody></table>`;
-  if(!editing)return;
-  document.querySelectorAll('#stand-'+gi+' .teamInp').forEach(inp=>inp.addEventListener('change',e=>{const giv=+e.target.dataset.gi,oldN=e.target.dataset.old,newN=e.target.value.trim()||oldN;renameTeam(giv,oldN,newN);render();autosave();}));
 }
 function renameTeam(gi,oldN,newN){const g=state.groups[gi];g.teams=g.teams.map(t=>t===oldN?newN:t);g.matches.forEach(m=>{if(m.home===oldN)m.home=newN;if(m.away===oldN)m.away=newN;});(state.scorers||[]).forEach(s=>{if(s.team===oldN)s.team=newN;});}
 function renderMatches(gi){
   const g=state.groups[gi];
-  const html=g.matches.map((m,mi)=>{
-    if(editing){
-      return `<div class="match"><span class="h" title="${esc(m.home)}">${esc(m.home)}</span><input type="number" min="0" class="scIn" data-gi="${gi}" data-mi="${mi}" data-s="hs" value="${m.hs??''}"><span class="dash">:</span><input type="number" min="0" class="scIn" data-gi="${gi}" data-mi="${mi}" data-s="as" value="${m.as??''}"><span class="a" title="${esc(m.away)}">${esc(m.away)}</span></div>`;
-    }
-    const played=m.hs!=null&&m.as!=null;
-    const sc=played?`${m.hs} <span class="v">:</span> ${m.as}`:`<span class="v">vs</span>`;
-    return `<div class="match"><span class="h" title="${esc(m.home)}">${esc(m.home)}</span><span class="sc">${sc}</span><span class="a" title="${esc(m.away)}">${esc(m.away)}</span></div>`;
-  }).join('')||'<div style="font-size:12px;color:var(--muted)">Belum ada jadwal.</div>';
+  const opt=(sel)=>g.teams.map(t=>`<option value="${esc(t)}"${t===sel?' selected':''}>${esc(t)}</option>`).join('');
+  let html;
+  if(editing){
+    html=g.matches.map((m,mi)=>`<div class="match medit"><select class="mTeam" data-gi="${gi}" data-mi="${mi}" data-side="home">${opt(m.home)}</select><input type="number" min="0" class="scIn" data-gi="${gi}" data-mi="${mi}" data-s="hs" value="${m.hs??''}"><span class="dash">:</span><input type="number" min="0" class="scIn" data-gi="${gi}" data-mi="${mi}" data-s="as" value="${m.as??''}"><select class="mTeam" data-gi="${gi}" data-mi="${mi}" data-side="away">${opt(m.away)}</select><button class="mDel" data-gi="${gi}" data-mi="${mi}" title="Hapus match">×</button></div>`).join('')
+      + `<button class="mini" data-act="addmatch" data-gi="${gi}">＋ Tambah match</button>`;
+  }else{
+    html=g.matches.map(m=>{
+      const played=m.hs!=null&&m.as!=null;
+      const sc=played?`${m.hs} <span class="v">:</span> ${m.as}`:`<span class="v">vs</span>`;
+      return `<div class="match"><span class="h" title="${esc(m.home)}">${esc(m.home)}</span><span class="sc">${sc}</span><span class="a" title="${esc(m.away)}">${esc(m.away)}</span></div>`;
+    }).join('')||'<div style="font-size:12px;color:var(--muted)">Belum ada jadwal.</div>';
+  }
   document.getElementById('match-'+gi).innerHTML=html;
   if(!editing)return;
   document.querySelectorAll('#match-'+gi+' .scIn').forEach(inp=>inp.addEventListener('input',e=>{const gv=+e.target.dataset.gi,mv=+e.target.dataset.mi,s=e.target.dataset.s;state.groups[gv].matches[mv][s]=e.target.value===''?null:Math.max(0,parseInt(e.target.value)||0);renderStand(gv);renderBracket();autosave();}));
+  document.querySelectorAll('#match-'+gi+' .mTeam').forEach(sel=>sel.addEventListener('change',e=>{const gv=+e.target.dataset.gi,mv=+e.target.dataset.mi,side=e.target.dataset.side;state.groups[gv].matches[mv][side]=e.target.value;renderStand(gv);renderBracket();autosave();}));
+  document.querySelectorAll('#match-'+gi+' .mDel').forEach(b=>b.addEventListener('click',e=>{const gv=+e.currentTarget.dataset.gi,mv=+e.currentTarget.dataset.mi;state.groups[gv].matches.splice(mv,1);renderMatches(gv);renderStand(gv);renderBracket();autosave();}));
+  const am=document.querySelector('#match-'+gi+' [data-act="addmatch"]');
+  if(am)am.addEventListener('click',e=>{const gv=+e.currentTarget.dataset.gi,gg=state.groups[gv];if(gg.teams.length<2){toast('Tambah tim dulu (min 2)');return;}gg.matches.push({home:gg.teams[0],away:gg.teams[1],hs:null,as:null});renderMatches(gv);renderStand(gv);autosave();});
 }
 function renderTopSkor(){
   const root=document.getElementById('topskor');
