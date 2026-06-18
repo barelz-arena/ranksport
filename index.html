@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barelz Battle Series — Klasemen, Bracket &amp; Top Skor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#1b3bd4;--blue-deep:#0e1d52;--blue-2:#2a52e0;--red:#e11d2a;
+    --gold:#ffc01f;--gold-deep:#f4a800;--sky:#5b8cff;--bg:#eef2fb;--paper:#fff;
+    --line:#dbe2f3;--ink:#0e1d52;--muted:#6b7494;--win:#15803d;--loss:#c0392b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;padding-bottom:60px;}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 16px;}
+  header{background:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.6), transparent),
+      radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,.5), transparent),
+      radial-gradient(1.5px 1.5px at 40% 70%, rgba(255,255,255,.45), transparent),
+      radial-gradient(1px 1px at 85% 60%, rgba(255,255,255,.5), transparent),
+      linear-gradient(135deg, var(--blue) 0%, var(--blue-deep) 100%);
+    color:#fff;text-align:center;padding:24px 16px 22px;border-bottom:5px solid var(--gold);position:relative;overflow:hidden;}
+  .logo-slot{margin-bottom:6px;}
+  .logo-slot img{max-height:120px;max-width:80%;}
+  #wordmark{display:none;}
+  #wordmark .rs{font-size:11px;letter-spacing:.34em;font-weight:800;color:var(--gold);text-transform:uppercase;}
+  #wordmark .bz{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(34px,9vw,58px);line-height:.86;letter-spacing:.01em;text-transform:uppercase;
+    background:linear-gradient(180deg,#fff 55%,#cfe0ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-text-stroke:1px rgba(14,29,82,.35);filter:drop-shadow(0 2px 0 var(--red));}
+  #wordmark .bs{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(14px,3.6vw,22px);letter-spacing:.18em;color:var(--gold);text-transform:uppercase;margin-top:2px;}
+  header .sub{font-size:12.5px;color:#bccbf2;font-weight:500;margin-top:8px;}
+  header .sub b{color:#fff;}
+
+  .liveband{background:var(--red);color:#fff;text-align:center;font-weight:800;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:7px;}
+  .liveband .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;margin-right:6px;animation:blink 1.4s infinite;}
+  @keyframes blink{50%{opacity:.25;}}
+
+  .bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin:18px 0 4px;}
+  .btn{font-weight:700;font-size:13px;border:1.5px solid var(--blue-deep);background:var(--paper);color:var(--blue-deep);padding:9px 16px;border-radius:30px;cursor:pointer;transition:.15s;font-family:inherit;text-decoration:none;display:inline-block;}
+  .btn:active{transform:scale(.97);}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .btn.gold{background:var(--gold);border-color:var(--gold-deep);color:var(--blue-deep);}
+  .btn.red{background:var(--red);border-color:var(--red);color:#fff;}
+  .btn.ghost{background:transparent;border-color:var(--line);color:var(--muted);}
+  .savestat{font-size:12px;color:var(--muted);font-weight:600;min-width:90px;text-align:left;}
+  .savestat.ok{color:var(--win);}
+  .editnote{text-align:center;font-size:12px;color:var(--muted);margin:4px 0 18px;}
+  body.editing .editnote{color:var(--gold-deep);font-weight:600;}
+
+  .legend{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px 16px;margin:8px 0 22px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center;font-size:12.5px;}
+  .legend .pill{display:inline-block;background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:3px 10px;margin:0 2px;font-weight:600;}
+  .legend .tb{color:var(--muted);} .legend .tb b{color:var(--gold-deep);} .legend b{color:var(--blue-deep);}
+
+  .sechead{font-family:'Archivo',sans-serif;font-weight:900;text-transform:uppercase;letter-spacing:.03em;font-size:21px;margin:28px 0 14px;display:flex;align-items:center;gap:10px;}
+  .sechead:before{content:"";width:28px;height:5px;background:var(--gold);border-radius:3px;}
+  .sechead.red:before{background:var(--red);}
+
+  .groups{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+  @media(max-width:760px){.groups{grid-template-columns:1fr;}}
+  .group{background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(14,29,82,.07);}
+  .ghead{background:linear-gradient(135deg,var(--blue),var(--blue-deep));color:#fff;padding:11px 16px;}
+  .ghead .gn{font-family:'Archivo',sans-serif;font-weight:900;font-size:17px;letter-spacing:.03em;text-transform:uppercase;}
+  .ghead .gd{font-size:11.5px;color:var(--gold);font-weight:700;margin-top:1px;}
+  .ghead input{font-family:inherit;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:7px;padding:3px 8px;margin:2px 0;width:100%;font-size:13px;}
+  .ghead input.gni{font-family:'Archivo',sans-serif;font-weight:900;font-size:15px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{background:var(--bg);color:var(--muted);font-weight:700;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:8px 4px;text-align:center;border-bottom:1px solid var(--line);}
+  thead th.tm{text-align:left;padding-left:12px;}
+  tbody td{padding:9px 4px;text-align:center;border-bottom:1px solid var(--line);}
+  tbody tr:last-child td{border-bottom:none;}
+  td.tm{text-align:left;padding-left:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
+  td.pos{font-family:'Archivo',sans-serif;font-weight:800;width:26px;color:var(--muted);}
+  td.pts{font-family:'Archivo',sans-serif;font-weight:900;color:var(--blue);font-size:15px;}
+  tr.qualify{background:linear-gradient(90deg,rgba(255,192,31,.20),rgba(255,192,31,.05));}
+  tr.qualify td.pos{color:var(--gold-deep);}
+  .tix{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.05em;color:var(--blue-deep);background:var(--gold);border-radius:5px;padding:2px 5px;margin-left:6px;vertical-align:middle;}
+  td.tm input{font-weight:600;font-size:13px;border:1px solid var(--line);border-radius:7px;padding:5px 7px;width:140px;font-family:inherit;}
+  .sg-pos{color:var(--win);} .sg-neg{color:var(--loss);}
+
+  .matches{padding:12px 14px 16px;border-top:2px solid var(--bg);}
+  .matches h4{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:700;}
+  .match{display:flex;align-items:center;gap:8px;padding:7px 0;font-size:13px;border-bottom:1px dashed var(--line);}
+  .match:last-child{border-bottom:none;}
+  .match .h{flex:1;text-align:right;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .match .a{flex:1;text-align:left;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .match .sc{font-family:'Archivo',sans-serif;font-weight:800;color:var(--blue);min-width:54px;text-align:center;}
+  .match .sc .v{color:var(--muted);font-weight:600;}
+  .match input{width:34px;text-align:center;border:1px solid var(--line);border-radius:7px;padding:5px 0;font-family:'Archivo',sans-serif;font-weight:800;font-size:14px;color:var(--blue);}
+  .match .dash{color:var(--muted);font-weight:700;}
+  .grpedit{margin-top:12px;display:none;gap:8px;flex-wrap:wrap;}
+  body.editing .grpedit{display:flex;}
+  .mini{font-size:11px;font-weight:700;padding:6px 11px;border-radius:20px;border:1px solid var(--line);background:var(--bg);color:var(--blue-deep);cursor:pointer;}
+
+  .topskor{background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(14,29,82,.07);}
+  .ts-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);}
+  .ts-row:last-child{border-bottom:none;}
+  .ts-rank{font-family:'Archivo',sans-serif;font-weight:900;font-size:18px;color:var(--muted);width:30px;text-align:center;}
+  .ts-row.top1{background:linear-gradient(90deg,rgba(255,192,31,.20),transparent);}
+  .ts-row.top1 .ts-rank{color:var(--gold-deep);}
+  .ts-info{flex:1;min-width:0;}
+  .ts-name{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ts-team{font-size:11.5px;color:var(--muted);font-weight:600;}
+  .ts-goals{font-family:'Archivo',sans-serif;font-weight:900;font-size:20px;color:var(--blue);display:flex;align-items:baseline;gap:4px;}
+  .ts-goals small{font-size:10px;color:var(--muted);font-weight:700;}
+  .ts-row input{font-family:inherit;border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:13px;}
+  .ts-row input.tsn{font-weight:700;flex:1;min-width:80px;}
+  .ts-row input.tst{width:120px;}
+  .ts-row input.tsg{width:48px;text-align:center;font-family:'Archivo',sans-serif;font-weight:800;}
+  .ts-del{border:none;background:var(--red);color:#fff;width:26px;height:26px;border-radius:50%;font-weight:800;cursor:pointer;flex:none;}
+
+  .ko-date{font-size:12.5px;color:var(--gold-deep);font-weight:700;margin:-6px 0 14px 38px;}
+  .ko-date:empty{display:none;}
+  .ko-date input{font-family:inherit;border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:13px;}
+  .bracket{display:flex;gap:14px;align-items:stretch;overflow-x:auto;padding:4px 2px 12px;}
+  .col{display:flex;flex-direction:column;justify-content:center;gap:18px;min-width:215px;flex:1;}
+  .col .lbl{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;text-align:center;margin-bottom:2px;}
+  .tie{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 6px 16px rgba(14,29,82,.08);}
+  .tie .row{display:flex;align-items:center;gap:8px;padding:10px 12px;}
+  .tie .row+.row{border-top:1px solid var(--line);}
+  .tie .row .nm{flex:1;font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tie .row .src{font-size:10px;color:var(--muted);font-weight:600;}
+  .tie .row .sc{font-family:'Archivo',sans-serif;font-weight:900;font-size:16px;min-width:22px;text-align:center;color:var(--blue);}
+  .tie .row.w{background:linear-gradient(90deg,rgba(255,192,31,.20),transparent);}
+  .tie .row input{width:34px;text-align:center;border:1px solid var(--line);border-radius:7px;padding:5px 0;font-family:'Archivo',sans-serif;font-weight:800;font-size:14px;}
+  .champ{background:linear-gradient(135deg,var(--blue),var(--blue-deep));color:#fff;border-radius:16px;padding:22px 16px;text-align:center;border:2px solid var(--gold);}
+  .champ .cap{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:800;}
+  .champ .trophy{font-size:32px;margin:6px 0;}
+  .champ .name{font-family:'Archivo',sans-serif;font-weight:900;font-size:20px;line-height:1.05;text-transform:uppercase;}
+  .champ .name.tbd{color:#9fb0e0;font-size:15px;}
+
+  .ribbon{margin-top:30px;background:linear-gradient(135deg,var(--blue),var(--blue-deep));color:#fff;border-radius:14px;padding:14px;text-align:center;font-family:'Archivo',sans-serif;font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-size:14px;border:2px solid var(--gold);}
+  .ribbon span{color:var(--gold);margin:0 8px;}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--blue-deep);color:#fff;padding:11px 20px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:90;box-shadow:0 10px 30px rgba(0,0,0,.3);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media print{
+    @page{margin:12mm;}
+    body{background:#fff;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .bar,.editnote,.grpedit,.toast,.liveband,#addScorer{display:none !important;}
+    header{border-radius:0;}
+    .group,.topskor,.tie,.champ,.ribbon{break-inside:avoid;box-shadow:none;}
+    .bracket{overflow:visible;flex-wrap:wrap;}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+
+  .rules{background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(14,29,82,.07);}
+  .rules .poin{background:linear-gradient(135deg,var(--blue),var(--blue-deep));color:#fff;padding:13px 16px;font-weight:700;font-size:12.5px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .rules .poin .pill{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:20px;padding:3px 11px;font-weight:700;}
+  .rules .poin .pill b{color:var(--gold);}
+  .rules ol{list-style:none;counter-reset:tb;margin:0;padding:6px 0;}
+  .rules li{counter-increment:tb;display:flex;gap:12px;align-items:flex-start;padding:11px 16px;border-bottom:1px solid var(--line);font-size:13px;}
+  .rules li:last-child{border-bottom:none;}
+  .rules li:before{content:counter(tb);flex:none;width:24px;height:24px;border-radius:7px;background:var(--blue-deep);color:#fff;font-family:'Archivo',sans-serif;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+  .rules li b{color:var(--blue-deep);font-weight:700;}
+  .rules li small{display:block;color:var(--muted);font-weight:500;margin-top:1px;}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body>
+<header>
+  <div class="logo-slot">
+    <img src="logo.png" alt="Barelz Battle Series" onerror="this.style.display='none';document.getElementById('wordmark').style.display='block';">
+    <div id="wordmark">
+      <div class="rs">Rank Sports</div>
+      <div class="bz">Barelz</div>
+      <div class="bs">Battle Series</div>
+    </div>
+  </div>
+  <div class="sub">Home of Ballers</div>
+</header>
+
+<div class="wrap">
+  <div class="bar">
+    <button class="btn primary" id="editBtn">✏️ Mode Edit</button>
+    <button class="btn gold" id="saveBtn">💾 Simpan</button>
+    <button class="btn ghost" id="resetScoreBtn">Reset skor</button>
+    <button class="btn red" id="pdfBtn">📄 Export PDF</button>
+    <button class="btn ghost" id="loginBtn">🔒 Login</button>
+    <span id="loginBox" style="display:none;align-items:center;gap:6px;">
+      <input id="loginInput" type="password" placeholder="Password" autocomplete="off" style="border:1.5px solid var(--line);border-radius:30px;padding:8px 12px;font-family:inherit;font-size:13px;width:130px;">
+      <button class="btn primary" id="loginGo">Masuk</button>
+    </span>
+    <a class="btn ghost" href="#" id="logoutBtn">Keluar</a>
+    <span class="savestat" id="saveStat"></span>
+  </div>
+  <div class="editnote" id="editNote"></div>
+
+
+
+  <div class="sechead">Fase Grup</div>
+  <div class="groups" id="groups"></div>
+
+  <div class="sechead red">Top Skor</div>
+  <div class="topskor" id="topskor"></div>
+  <button class="btn ghost" id="addScorer" style="margin:12px 0;display:none;">＋ Tambah pemain</button>
+
+  <div class="sechead">Bracket · Grand Champions</div>
+  <div class="ko-date" id="koDate"></div>
+  <div class="bracket" id="bracket"></div>
+
+  <div class="sechead red">Sistem Penentuan Peringkat</div>
+  <div class="rules">
+    <div class="poin">
+      <span class="pill"><b>Menang</b> 3</span>
+      <span class="pill"><b>Seri</b> 1</span>
+      <span class="pill"><b>Kalah</b> 0</span>
+      <span class="pill"><b>Menang WO</b> 3</span>
+      <span class="pill"><b>WO</b> 0</span>
+    </div>
+    <ol>
+      <li><div><b>Head to Head (H2H)</b><small>Hasil pertandingan langsung antar tim yang poinnya sama</small></div></li>
+      <li><div><b>Selisih Gol</b><small>Gol memasukkan dikurangi gol kebobolan</small></div></li>
+      <li><div><b>Jumlah Gol Memasukkan</b><small>Yang nyetak gol lebih banyak</small></div></li>
+      <li><div><b>Jumlah Kemenangan</b><small>Yang menangnya lebih banyak</small></div></li>
+      <li><div><b>Jumlah Kebobolan Paling Sedikit</b><small>Yang kebobolannya paling sedikit</small></div></li>
+      <li><div><b>Play Off (2 x 10 menit)</b><small>Kalau semua poin di atas masih sama</small></div></li>
+      <li><div><b>Keputusan Panitia</b><small>Bersifat final</small></div></li>
+    </ol>
+  </div>
+
+  <div class="ribbon">Play Fair <span>|</span> Respect <span>|</span> Win Together</div>
+</div>
+<datalist id="allTeams"></datalist>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   >>> ISI CONFIG FIREBASE KAMU DI SINI <<<
+   1. console.firebase.google.com -> Add project
+   2. Build > Realtime Database > Create Database
+   3. Project settings > Your apps (web </>) -> copy config
+   4. Tempel di bawah, ganti yang "ISI_..."
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyDPEfdBAGTHqyYAq23rH-hW-C7SVFp-mzk",
+  authDomain: "barelz-arena.firebaseapp.com",
+  databaseURL: "https://barelz-arena-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "barelz-arena",
+  storageBucket: "barelz-arena.firebasestorage.app",
+  messagingSenderId: "943661445783",
+  appId: "1:943661445783:web:5c3d1c8298ef74e8ff6fd2"
+};
+let fbRef = null, fbOK = false;
+
+const DEFAULT = {
+  meta:{season:"2026"},
+  groups:[
+    {name:"Grup A",date:"20 Juni 2026",teams:["Sawah Besar FC","Karang Anyar United","Mangga Dua FC","Pasar Baru AllStars"],
+     matches:[
+       {home:"Sawah Besar FC",away:"Karang Anyar United",hs:2,as:1},
+       {home:"Mangga Dua FC",away:"Pasar Baru AllStars",hs:1,as:1},
+       {home:"Sawah Besar FC",away:"Mangga Dua FC",hs:3,as:1},
+       {home:"Karang Anyar United",away:"Pasar Baru AllStars",hs:2,as:0},
+       {home:"Sawah Besar FC",away:"Pasar Baru AllStars",hs:0,as:2},
+       {home:"Karang Anyar United",away:"Mangga Dua FC",hs:2,as:0}]},
+    {name:"Grup B",date:"28 Juni 2026",teams:["Gunung Sahari","Kartini Squad","Hayam Wuruk FC","Glodok City"],
+     matches:[
+       {home:"Gunung Sahari",away:"Kartini Squad",hs:3,as:0},
+       {home:"Hayam Wuruk FC",away:"Glodok City",hs:2,as:2},
+       {home:"Gunung Sahari",away:"Hayam Wuruk FC",hs:1,as:0},
+       {home:"Kartini Squad",away:"Glodok City",hs:1,as:3},
+       {home:"Gunung Sahari",away:"Glodok City",hs:2,as:1},
+       {home:"Kartini Squad",away:"Hayam Wuruk FC",hs:0,as:0}]},
+    {name:"Grup C",date:"5 Juli 2026",teams:["Senen Selection","Kemayoran FC","Tanah Abang United","Cempaka Putih"],
+     matches:[
+       {home:"Senen Selection",away:"Kemayoran FC",hs:1,as:2},
+       {home:"Tanah Abang United",away:"Cempaka Putih",hs:4,as:1},
+       {home:"Senen Selection",away:"Tanah Abang United",hs:0,as:1},
+       {home:"Kemayoran FC",away:"Cempaka Putih",hs:2,as:2},
+       {home:"Senen Selection",away:"Cempaka Putih",hs:3,as:0},
+       {home:"Kemayoran FC",away:"Tanah Abang United",hs:1,as:1}]},
+    {name:"Grup D",date:"12 Juli 2026",teams:["Pademangan FC","Ancol Strikers","Kemakmuran FC","Krekot Boys"],
+     matches:[
+       {home:"Pademangan FC",away:"Ancol Strikers",hs:2,as:0},
+       {home:"Kemakmuran FC",away:"Krekot Boys",hs:1,as:3},
+       {home:"Pademangan FC",away:"Kemakmuran FC",hs:2,as:1},
+       {home:"Ancol Strikers",away:"Krekot Boys",hs:1,as:1},
+       {home:"Pademangan FC",away:"Krekot Boys",hs:0,as:0},
+       {home:"Ancol Strikers",away:"Kemakmuran FC",hs:3,as:2}]},
+  ],
+  knockout:{date:"18 Juli 2026",sf:[
+      {label:"Semifinal 1",homeSrc:"Grup A",awaySrc:"Grup B",hs:2,as:1},
+      {label:"Semifinal 2",homeSrc:"Grup C",awaySrc:"Grup D",hs:1,as:3}],
+    final:{hs:2,as:0}},
+  scorers:[
+    {name:"Rizky Saputra",team:"Sawah Besar FC",goals:6},
+    {name:"Dimas Wibowo",team:"Gunung Sahari",goals:5},
+    {name:"Andi Pratama",team:"Karang Anyar United",goals:5},
+    {name:"Bagas Nugroho",team:"Pademangan FC",goals:4},
+    {name:"Fajar Ramadhan",team:"Senen Selection",goals:4}]
+};
+
+let state = clone(DEFAULT), editing = false, serverOK = false, saveTimer = null;
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function loadState(){
+  if(typeof firebase === 'undefined'){ state = clone(DEFAULT); render(); setStat('Lagi di preview / SDK keblok. Normal kok, jalan di GitHub Pages.', false); return; }
+  try{
+    if(firebaseConfig.apiKey && firebaseConfig.apiKey !== 'ISI_API_KEY'){
+      firebase.initializeApp(firebaseConfig);
+      fbRef = firebase.database().ref('barelz/state');
+      fbOK = true;
+    }
+  }catch(e){ fbOK = false; }
+  if(!fbOK){ state = clone(DEFAULT); render(); setStat('Config Firebase belum diisi', false); return; }
+  fbRef.on('value', function(snap){
+    if(editing) return;               // jangan timpa data yang lagi diedit
+    const v = snap.val();
+    if(v && v.groups){ state = v; if(!state.scorers) state.scorers = []; }
+    else { state = clone(DEFAULT); if(canEdit) saveState(true); }   // seed kalau DB kosong
+    render();
+    setStat('Terhubung Firebase', true);
+  }, function(err){ state = clone(DEFAULT); render(); setStat('Gagal konek Firebase', false); });
+}
+function saveState(silent){
+  if(!fbOK){ if(!silent) toast('Isi config Firebase dulu di dalam file ya.'); return; }
+  fbRef.set(state).then(function(){ if(!silent) toast('Tersimpan ke Firebase ✓'); setStat('Tersimpan ✓', true); })
+    .catch(function(e){ if(!silent) toast('Gagal menyimpan'); setStat('Gagal simpan', false); });
+}
+function autosave(){ if(!canEdit) return; clearTimeout(saveTimer); setStat('Menyimpan…',false); saveTimer=setTimeout(function(){saveState(true);},600); }
+function setStat(t,ok){ const e=document.getElementById('saveStat'); if(!e)return; e.textContent=t; e.classList.toggle('ok',!!ok); }
+function toast(t){ const e=document.getElementById('toast'); e.textContent=t; e.classList.add('show'); clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('show'),2600); }
+
+function roundRobin(teams){
+  let t=teams.slice(); if(t.length%2)t.push(null);
+  const n=t.length,half=n/2,fx=[];
+  for(let r=0;r<n-1;r++){ for(let i=0;i<half;i++){const h=t[i],a=t[n-1-i];if(h!==null&&a!==null)fx.push({home:h,away:a,hs:null,as:null});}
+    const rest=t.slice(1);rest.unshift(rest.pop());t=[t[0],...rest]; }
+  return fx;
+}
+function standings(g){
+  const s={}; g.teams.forEach(t=>s[t]={team:t,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0});
+  g.matches.forEach(m=>{
+    if(m.hs==null||m.as==null||!s[m.home]||!s[m.away])return;
+    const H=s[m.home],A=s[m.away];
+    H.p++;A.p++;H.gf+=+m.hs;H.ga+=+m.as;A.gf+=+m.as;A.ga+=+m.hs;
+    if(+m.hs>+m.as){H.w++;A.l++;H.pts+=3;}else if(+m.hs<+m.as){A.w++;H.l++;A.pts+=3;}else{H.d++;A.d++;H.pts++;A.pts++;}
+  });
+  const arr=g.teams.map(t=>({...s[t],gd:s[t].gf-s[t].ga}));
+  arr.sort((a,b)=>b.pts-a.pts);
+  let i=0;
+  while(i<arr.length){
+    let j=i;while(j<arr.length&&arr[j].pts===arr[i].pts)j++;
+    if(j-i>1){
+      const block=arr.slice(i,j),set=new Set(block.map(x=>x.team)),h2h={};
+      block.forEach(x=>h2h[x.team]=0);
+      g.matches.forEach(m=>{if(m.hs==null||m.as==null)return;if(set.has(m.home)&&set.has(m.away)){if(+m.hs>+m.as)h2h[m.home]+=3;else if(+m.hs<+m.as)h2h[m.away]+=3;else{h2h[m.home]++;h2h[m.away]++;}}});
+      block.sort((a,b)=>(h2h[b.team]-h2h[a.team])||(b.gd-a.gd)||(b.gf-a.gf)||(b.w-a.w)||(a.ga-b.ga));
+      for(let k=0;k<block.length;k++)arr[i+k]=block[k];
+    }
+    i=j;
+  }
+  return arr;
+}
+function decided(g){return g.matches.some(m=>m.hs!=null&&m.as!=null);}
+function winnerOfGroup(name){const g=state.groups.find(x=>x.name===name);if(!g||!decided(g))return null;return standings(g)[0].team;}
+function sgClass(n){return n>0?'sg-pos':(n<0?'sg-neg':'');}
+function fmtSg(n){return (n>0?'+':'')+n;}
+
+function render(){
+  updateChrome();
+  document.body.classList.toggle('editing',editing);
+  const eb=document.getElementById('editBtn');
+  if(eb){eb.textContent=editing?'✓ Selesai':'✏️ Mode Edit';eb.classList.toggle('gold',editing);}
+  refreshTeamList(); renderGroups(); renderTopSkor(); renderBracket();
+}
+function refreshTeamList(){const dl=document.getElementById('allTeams');const all=[...new Set(state.groups.flatMap(g=>g.teams))];dl.innerHTML=all.map(t=>`<option value="${esc(t)}">`).join('');}
+
+function renderGroups(){
+  const root=document.getElementById('groups');root.innerHTML='';
+  state.groups.forEach((g,gi)=>{
+    const head=editing
+      ?`<input class="gni gnInp" data-gi="${gi}" value="${esc(g.name)}"><input class="gdInp" data-gi="${gi}" value="${esc(g.date||'')}" placeholder="Tanggal">`
+      :`<div class="gn">${esc(g.name)}</div><div class="gd">📅 ${esc(g.date||'-')}</div>`;
+    const el=document.createElement('div');el.className='group';
+    el.innerHTML=`<div class="ghead">${head}</div><div id="stand-${gi}"></div>
+      <div class="matches"><h4>Jadwal &amp; Hasil</h4><div id="match-${gi}"></div>
+      <div class="grpedit"><button class="mini" data-act="rr" data-gi="${gi}">🔄 Buat jadwal (round robin)</button>
+      <button class="mini" data-act="addteam" data-gi="${gi}">＋ Tambah tim</button></div></div>`;
+    root.appendChild(el); renderStand(gi); renderMatches(gi);
+  });
+  if(!editing) return;
+  root.querySelectorAll('.gnInp').forEach(inp=>inp.addEventListener('change',e=>{state.groups[+e.target.dataset.gi].name=e.target.value;render();autosave();}));
+  root.querySelectorAll('.gdInp').forEach(inp=>inp.addEventListener('change',e=>{state.groups[+e.target.dataset.gi].date=e.target.value;autosave();}));
+  root.querySelectorAll('[data-act="rr"]').forEach(b=>b.addEventListener('click',e=>{const gi=+e.target.dataset.gi;state.groups[gi].matches=roundRobin(state.groups[gi].teams);renderMatches(gi);renderStand(gi);renderBracket();autosave();}));
+  root.querySelectorAll('[data-act="addteam"]').forEach(b=>b.addEventListener('click',e=>{const gi=+e.target.dataset.gi;state.groups[gi].teams.push("Tim baru "+(state.groups[gi].teams.length+1));render();autosave();}));
+}
+function renderStand(gi){
+  const g=state.groups[gi],arr=standings(g);
+  const rows=arr.map((r,idx)=>{
+    const q=idx===0&&decided(g);
+    const tc=editing?`<input class="teamInp" data-gi="${gi}" data-old="${esc(r.team)}" value="${esc(r.team)}">`:`${esc(r.team)}${q?'<span class="tix">🎫 SF</span>':''}`;
+    return `<tr class="${q?'qualify':''}"><td class="pos">${idx+1}</td><td class="tm" title="${esc(r.team)}">${tc}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.gf}</td><td>${r.ga}</td><td class="${sgClass(r.gd)}">${fmtSg(r.gd)}</td><td class="pts">${r.pts}</td></tr>`;
+  }).join('');
+  document.getElementById('stand-'+gi).innerHTML=`<table><thead><tr><th>#</th><th class="tm">Tim</th><th>P</th><th>M</th><th>S</th><th>K</th><th>GM</th><th>GK</th><th>SG</th><th>Pts</th></tr></thead><tbody>${rows}</tbody></table>`;
+  if(!editing)return;
+  document.querySelectorAll('#stand-'+gi+' .teamInp').forEach(inp=>inp.addEventListener('change',e=>{const giv=+e.target.dataset.gi,oldN=e.target.dataset.old,newN=e.target.value.trim()||oldN;renameTeam(giv,oldN,newN);render();autosave();}));
+}
+function renameTeam(gi,oldN,newN){const g=state.groups[gi];g.teams=g.teams.map(t=>t===oldN?newN:t);g.matches.forEach(m=>{if(m.home===oldN)m.home=newN;if(m.away===oldN)m.away=newN;});(state.scorers||[]).forEach(s=>{if(s.team===oldN)s.team=newN;});}
+function renderMatches(gi){
+  const g=state.groups[gi];
+  const html=g.matches.map((m,mi)=>{
+    if(editing){
+      return `<div class="match"><span class="h" title="${esc(m.home)}">${esc(m.home)}</span><input type="number" min="0" class="scIn" data-gi="${gi}" data-mi="${mi}" data-s="hs" value="${m.hs??''}"><span class="dash">:</span><input type="number" min="0" class="scIn" data-gi="${gi}" data-mi="${mi}" data-s="as" value="${m.as??''}"><span class="a" title="${esc(m.away)}">${esc(m.away)}</span></div>`;
+    }
+    const played=m.hs!=null&&m.as!=null;
+    const sc=played?`${m.hs} <span class="v">:</span> ${m.as}`:`<span class="v">vs</span>`;
+    return `<div class="match"><span class="h" title="${esc(m.home)}">${esc(m.home)}</span><span class="sc">${sc}</span><span class="a" title="${esc(m.away)}">${esc(m.away)}</span></div>`;
+  }).join('')||'<div style="font-size:12px;color:var(--muted)">Belum ada jadwal.</div>';
+  document.getElementById('match-'+gi).innerHTML=html;
+  if(!editing)return;
+  document.querySelectorAll('#match-'+gi+' .scIn').forEach(inp=>inp.addEventListener('input',e=>{const gv=+e.target.dataset.gi,mv=+e.target.dataset.mi,s=e.target.dataset.s;state.groups[gv].matches[mv][s]=e.target.value===''?null:Math.max(0,parseInt(e.target.value)||0);renderStand(gv);renderBracket();autosave();}));
+}
+function renderTopSkor(){
+  const root=document.getElementById('topskor');
+  const arr=(state.scorers||[]).map((s,i)=>({...s,_i:i})).sort((a,b)=>(b.goals||0)-(a.goals||0));
+  if(!arr.length&&!editing){root.innerHTML='<div style="padding:16px;font-size:13px;color:var(--muted)">Belum ada data top skor.</div>';return;}
+  root.innerHTML=arr.map((s,rank)=>{
+    if(editing){
+      return `<div class="ts-row ${rank===0?'top1':''}"><div class="ts-rank">${rank+1}</div><input class="tsn scorerInp" data-i="${s._i}" data-f="name" value="${esc(s.name||'')}" placeholder="Nama pemain"><input class="tst scorerInp" data-i="${s._i}" data-f="team" list="allTeams" value="${esc(s.team||'')}" placeholder="Tim"><input class="tsg scorerInp" data-i="${s._i}" data-f="goals" type="number" min="0" value="${s.goals??0}"><button class="ts-del" data-i="${s._i}">×</button></div>`;
+    }
+    return `<div class="ts-row ${rank===0?'top1':''}"><div class="ts-rank">${rank===0?'👑':rank+1}</div><div class="ts-info"><div class="ts-name">${esc(s.name||'-')}</div><div class="ts-team">${esc(s.team||'-')}</div></div><div class="ts-goals">${s.goals||0}<small>GOL</small></div></div>`;
+  }).join('');
+  if(!editing)return;
+  root.querySelectorAll('.scorerInp').forEach(inp=>inp.addEventListener('change',e=>{const i=+e.target.dataset.i,f=e.target.dataset.f;state.scorers[i][f]=(f==='goals')?Math.max(0,parseInt(e.target.value)||0):e.target.value;renderTopSkor();autosave();}));
+  root.querySelectorAll('.ts-del').forEach(b=>b.addEventListener('click',e=>{state.scorers.splice(+e.target.dataset.i,1);renderTopSkor();autosave();}));
+}
+function renderBracket(){
+  const root=document.getElementById('bracket'),k=state.knockout;
+  const kd=document.getElementById('koDate');
+  if(kd){
+    kd.innerHTML = editing
+      ? '📅 <input class="koDateInp" value="'+esc(k.date||'')+'" placeholder="Tanggal Grand Champions">'
+      : (k.date ? '📅 '+esc(k.date) : '');
+    if(editing){ const di=kd.querySelector('.koDateInp'); if(di) di.addEventListener('change',e=>{state.knockout.date=e.target.value;autosave();}); }
+  }
+  const slot=src=>{const w=winnerOfGroup(src);return{name:w||('Juara '+src),src,decided:!!w};};
+  function tieHTML(sf,idx){
+    const home=slot(sf.homeSrc),away=slot(sf.awaySrc),hs=sf.hs,as=sf.as;
+    const played=hs!=null&&as!=null&&hs!==as,hw=played&&hs>as,aw=played&&as>hs;
+    const row=(side,slt,win)=>`<div class="row ${win?'w':''}"><div><div class="nm" title="${esc(slt.name)}">${esc(slt.name)}</div><div class="src">${esc(slt.src)}</div></div>${editing?`<input type="number" min="0" class="kIn" data-sf="${idx}" data-s="${side}" value="${(side==='hs'?hs:as)??''}">`:`<div class="sc">${(side==='hs'?hs:as)??'–'}</div>`}</div>`;
+    return `<div class="tie">${row('hs',home,hw)}${row('as',away,aw)}</div>`;
+  }
+  const sfWin=sf=>{const h=slot(sf.homeSrc),a=slot(sf.awaySrc);if(sf.hs==null||sf.as==null||sf.hs===sf.as)return null;return sf.hs>sf.as?h.name:a.name;};
+  const w1=sfWin(k.sf[0]),w2=sfWin(k.sf[1]);
+  const fH={name:w1||'Pemenang SF1'},fA={name:w2||'Pemenang SF2'},fhs=k.final.hs,fas=k.final.as;
+  const fp=fhs!=null&&fas!=null&&fhs!==fas,fhw=fp&&fhs>fas,faw=fp&&fas>fhs;
+  const frow=(side,slt,win)=>`<div class="row ${win?'w':''}"><div class="nm" title="${esc(slt.name)}">${esc(slt.name)}</div>${editing?`<input type="number" min="0" class="fIn" data-s="${side}" value="${(side==='hs'?fhs:fas)??''}">`:`<div class="sc">${(side==='hs'?fhs:fas)??'–'}</div>`}</div>`;
+  const champ=fp?(fhs>fas?fH.name:fA.name):null;
+  root.innerHTML=`<div class="col"><div class="lbl">Semifinal</div>${tieHTML(k.sf[0],0)}${tieHTML(k.sf[1],1)}</div><div class="col"><div class="lbl">Final</div><div class="tie">${frow('hs',fH,fhw)}${frow('as',fA,faw)}</div></div><div class="col"><div class="lbl">Grand Champion</div><div class="champ"><div class="cap">Juara</div><div class="trophy">🏆</div><div class="name ${champ?'':'tbd'}">${champ?esc(champ):'Belum ditentukan'}</div></div></div>`;
+  if(!editing)return;
+  root.querySelectorAll('.kIn').forEach(inp=>inp.addEventListener('input',e=>{state.knockout.sf[+e.target.dataset.sf][e.target.dataset.s]=e.target.value===''?null:Math.max(0,parseInt(e.target.value)||0);renderBracket();autosave();}));
+  root.querySelectorAll('.fIn').forEach(inp=>inp.addEventListener('input',e=>{state.knockout.final[e.target.dataset.s]=e.target.value===''?null:Math.max(0,parseInt(e.target.value)||0);renderBracket();autosave();}));
+}
+
+/* ---------- Kontrol & login ---------- */
+const ADMIN_PASS = 'barelz2026';     // <-- ganti password admin di sini
+let canEdit = false;
+function show(id,on){const e=document.getElementById(id);if(e)e.style.display=on?'':'none';}
+function updateChrome(){
+  show('editBtn',canEdit); show('saveBtn',canEdit); show('resetScoreBtn',canEdit); show('logoutBtn',canEdit); show('addScorer',canEdit&&editing);
+  show('loginBtn',!canEdit); show('loginBox',false);
+  const en=document.getElementById('editNote');
+  if(en) en.innerHTML = canEdit
+    ? 'Mode admin. Tap <b>Mode Edit</b> buat isi skor &amp; top skor. Data kesimpan otomatis di browser ini.'
+    : 'Tampilan klasemen (read-only). Tap <b>🔒 Login</b> buat masuk mode admin &amp; ngedit.';
+}
+function doLogin(){
+  const p=document.getElementById('loginInput').value;
+  if(p===ADMIN_PASS){canEdit=true;editing=false;toast('Login berhasil ✓');render();window.scrollTo(0,0);}
+  else toast('Password salah');
+}
+document.getElementById('loginBtn').addEventListener('click',()=>{
+  document.getElementById('loginBtn').style.display='none';
+  document.getElementById('loginBox').style.display='inline-flex';
+  const inp=document.getElementById('loginInput'); inp.value=''; inp.focus();
+});
+document.getElementById('loginGo').addEventListener('click',doLogin);
+document.getElementById('loginInput').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('logoutBtn').addEventListener('click',e=>{e.preventDefault();canEdit=false;editing=false;toast('Keluar mode admin');render();window.scrollTo(0,0);});
+document.getElementById('editBtn').addEventListener('click',()=>{if(!canEdit)return;editing=!editing;render();});
+document.getElementById('saveBtn').addEventListener('click',()=>saveState(false));
+document.getElementById('resetScoreBtn').addEventListener('click',()=>{
+  state.groups.forEach(g=>g.matches.forEach(m=>{m.hs=null;m.as=null;}));
+  state.knockout.sf.forEach(s=>{s.hs=null;s.as=null;});
+  state.knockout.final.hs=null;state.knockout.final.as=null;
+  render();autosave();
+});
+document.getElementById('addScorer').addEventListener('click',()=>{if(!state.scorers)state.scorers=[];state.scorers.push({name:"",team:"",goals:0});renderTopSkor();autosave();});
+document.getElementById('pdfBtn').addEventListener('click',()=>{editing=false;render();setTimeout(()=>{try{window.print();}catch(e){toast('Cetak keblok di sini, jalan kok kalau file dibuka langsung.');}},300);});
+loadState();
+</script>
+</body>
+</html>
