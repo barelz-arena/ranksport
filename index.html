@@ -328,7 +328,7 @@ function loadState(){
     if(v && v.groups){ state = v; if(!state.scorers) state.scorers = []; }
     else { state = clone(DEFAULT); if(canEdit) saveState(true); }   // seed kalau DB kosong
     render();
-    setStat('Terhubung Firebase', true);
+    setStat('LIVE', true);
   }, function(err){ state = clone(DEFAULT); render(); setStat('Gagal konek Firebase', false); });
 }
 function saveState(silent){
